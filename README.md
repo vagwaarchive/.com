@@ -41,7 +41,7 @@ https://drive.google.com/uc?export=view&id=FILE_ID
 শিরোনাম: পুরোনো বাড়ির ছবি
 বিবরণ: এটা আমাদের দাদাবাড়ির ছবি, ১৯৮৫ সালে তোলা।
 ক্যাটাগরি: ছেলে / মেয়ে / অন্যান্য
-ঠিকানা: বিশ্বনাথ, সিলেট
+ঠিকানা:
 ছবি:
 - https://i.imgur.com/abc123.jpg
 - images/old-house-2.jpg
