@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>এন্ট্রি বানাও — অ্যাডমিন টুল (লোকাল)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&family=IBM+Plex+Sans+Bengali:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE8DC; --card:#F8F5EC; --ink:#262A44; --ink-soft:#5B5F79;
+    --hairline:#D9D2BE; --stamp:#AE3A40; --olive:#7C8A54;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:'IBM Plex Sans Bengali', sans-serif; padding:36px 20px 80px; }
+  .wrap{ max-width:620px; margin:0 auto; }
+  .banner{ background:#262A44; color:#EDE8DC; padding:12px 16px; font-size:12.5px; margin-bottom:24px; line-height:1.7; }
+  h1{ font-family:'Tiro Bangla', serif; font-weight:400; font-size:28px; margin:0 0 6px; }
+  .sub{ font-size:13px; color:var(--ink-soft); margin-bottom:28px; }
+  .card{ background:var(--card); border:1px solid var(--hairline); padding:26px; }
+  .field{ margin-bottom:18px; }
+  .field label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:6px; }
+  .field input[type=text], .field input[type=number], .field textarea{
+    width:100%; border:1px solid var(--hairline); background:var(--paper);
+    padding:10px 12px; font-family:'IBM Plex Sans Bengali', sans-serif; font-size:14px; color:var(--ink);
+  }
+  .field textarea{ min-height:100px; resize:vertical; }
+  .row2{ display:flex; gap:12px; }
+  .row2 > div{ flex:1; }
+  .rep-row{ display:flex; gap:8px; margin-bottom:8px; }
+  .rep-row input{ border:1px solid var(--hairline); background:var(--paper); padding:8px 10px; font-size:13px; }
+  .rep-row .small{ width:110px; }
+  .rep-row .grow{ flex:1; }
+  .rep-row button{ border:none; background:none; color:var(--ink-soft); cursor:pointer; font-size:16px; }
+  .add-row-btn{ background:none; border:1px dashed var(--hairline); padding:7px 12px; font-size:12px; color:var(--ink-soft); cursor:pointer; width:100%; }
+  .add-row-btn:hover{ border-color:var(--olive); color:var(--olive); }
+  .gen-btn{ background:var(--ink); color:var(--paper); border:none; padding:11px 22px; font-size:14px; font-weight:500; cursor:pointer; margin-top:8px; }
+  .gen-btn:hover{ background:var(--stamp); }
+  .output{ margin-top:26px; }
+  .output h3{ font-family:'Tiro Bangla', serif; font-weight:400; font-size:18px; margin:0 0 10px; }
+  pre{ background:#1D2033; color:#EDE8DC; padding:16px; font-size:12.5px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; }
+  .copy-btn{ background:var(--olive); color:#fff; border:none; padding:9px 18px; font-size:13px; cursor:pointer; margin-top:10px; }
+  .hint{ font-size:11.5px; color:var(--ink-soft); margin-top:6px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="banner">
+    এই পেজটা শুধু নিজের কম্পিউটারে খুলে ব্যবহারের জন্য — GitHub Pages-এ পাবলিশ করার দরকার নেই।
+    এখানে ফর্ম পূরণ করে "JSON তৈরি করো" চাপলে নিচে একটা কোড ব্লক আসবে, সেটা কপি করে <code class="mono">data.json</code>
+    ফাইলের অ্যারের ভেতরে (প্রথম আইটেমের আগে, কমা দিয়ে) পেস্ট করে GitHub-এ কমিট করলেই নতুন এন্ট্রি লাইভ হয়ে যাবে।
+  </div>
+
+  <h1>নতুন এন্ট্রি বানাও</h1>
+  <p class="sub">মেইলে পাওয়া লেখা পেস্ট করো, অথবা সরাসরি নিচের ফর্ম নিজে পূরণ করো।</p>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="field">
+      <label>মেইল থেকে কপি করা লেখা এখানে পেস্ট করো</label>
+      <textarea id="emailPaste" style="min-height:150px;" placeholder="শিরোনাম: ...
+বিবরণ: ...
+ক্যাটাগরি: ছেলে / মেয়ে / অন্যান্য
+ঠিকানা: ...
+ছবি:
+- https://...
+লিংক:
+- নাম | https://..."></textarea>
+    </div>
+    <button type="button" class="add-row-btn" id="parseBtn" style="border-style:solid;">↓ ফর্মে বসাও</button>
+    <div class="hint">প্রত্যাশিত ফরম্যাট: <code class="mono">শিরোনাম:</code>, <code class="mono">বিবরণ:</code>, <code class="mono">ক্যাটাগরি:</code>, <code class="mono">ঠিকানা:</code>, তারপর <code class="mono">ছবি:</code> ও <code class="mono">লিংক:</code> এর নিচে প্রতিটা আইটেম <code class="mono">-</code> দিয়ে শুরু, লিংকে নাম আর URL এর মাঝে <code class="mono">|</code>।</div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="field">
+      <label>বর্তমান data.json আপলোড করো (ঐচ্ছিক — ডুপ্লিকেট চেক আর অ্যাকসেশন নম্বর অটো বসাতে সাহায্য করবে)</label>
+      <input type="file" id="dataJsonUpload" accept="application/json">
+      <div class="hint" id="uploadStatus"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row2">
+      <div class="field">
+        <label>অ্যাকসেশন নম্বর</label>
+        <input type="number" id="accession" value="2">
+      </div>
+      <div class="field">
+        <label>তারিখ</label>
+        <input type="text" id="date" value="">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>শিরোনাম</label>
+      <input type="text" id="title" placeholder="যেমন: পুরোনো বাড়ির ছবি">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>ক্যাটাগরি</label>
+        <input type="text" id="category" list="categoryOptions" placeholder="ছেলে / মেয়ে / অন্যান্য">
+        <datalist id="categoryOptions">
+          <option value="ছেলে">
+          <option value="মেয়ে">
+          <option value="অন্যান্য">
+        </datalist>
+      </div>
+      <div class="field">
+        <label>ঠিকানা</label>
+        <input type="text" id="address" placeholder="যেমন: বিশ্বনাথ, সিলেট">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>বিবরণ / নোট</label>
+      <textarea id="text" placeholder="যা মনে রাখতে চাও..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>ছবির লিংক (একাধিক দেওয়া যাবে)</label>
+      <div id="imageRows"></div>
+      <button type="button" class="add-row-btn" id="addImageBtn">+ ছবির লিংক যোগ করো</button>
+      <div class="hint">
+        ছবি রাখার সহজ উপায়: এই রিপোর একটা <code class="mono">images/</code> ফোল্ডারে ছবি রেখে দাও, তারপর
+        লিংক হিসেবে লেখো <code class="mono">images/photo1.jpg</code>। গুগল ড্রাইভ ব্যবহার করতে চাইলে
+        শেয়ার লিংক থেকে ফাইল আইডি নিয়ে এই ফরম্যাটে লেখো:
+        <code class="mono">https://drive.google.com/uc?export=view&id=FILE_ID</code>
+        (সাধারণ শেয়ার লিংক সরাসরি কাজ করে না)। পাশে ✓/✗ চিহ্ন দিয়ে বোঝাবে ছবিটা লোড হয় কিনা —
+        তবে <code class="mono">images/photo1.jpg</code>-এর মতো রিলেটিভ পাথ শুধু GitHub-এ আপলোডের পরই ঠিকভাবে চেক হবে,
+        এখন লোকালি ✗ দেখালেও চিন্তা করো না যদি ফাইলটা আসলে থাকে।
+      </div>
+    </div>
+
+    <div class="field">
+      <label>লিংক</label>
+      <div id="linkRows"></div>
+      <button type="button" class="add-row-btn" id="addLinkBtn">+ লিংক যোগ করো</button>
+    </div>
+
+    <button class="gen-btn" id="genBtn">JSON তৈরি করো</button>
+
+    <div class="output" id="output" style="display:none;">
+      <h3>এই JSON ব্লকটা কপি করে data.json-এ পেস্ট করো</h3>
+      <pre id="jsonOut"></pre>
+      <button class="copy-btn" id="copyBtn">কপি করো</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+$('date').value = new Date().toISOString().slice(0,10);
+
+function addImageRow(val=''){
+  const row = document.createElement('div');
+  row.className = 'rep-row';
+  row.innerHTML = `
+    <input type="text" class="grow img-input" placeholder="images/photo1.jpg অথবা পূর্ণ URL" value="${val}">
+    <span class="img-status mono" style="width:60px; font-size:11px; color:var(--ink-soft);"></span>
+    <button type="button">×</button>
+  `;
+  row.querySelector('button').addEventListener('click', ()=> row.remove());
+  const input = row.querySelector('.img-input');
+  const status = row.querySelector('.img-status');
+  let debounceTimer;
+  input.addEventListener('input', ()=>{
+    clearTimeout(debounceTimer);
+    status.textContent = '';
+    const url = input.value.trim();
+    if(!url) return;
+    debounceTimer = setTimeout(()=> checkImage(url, status), 500);
+  });
+  $('imageRows').appendChild(row);
+  if(val) checkImage(val, row.querySelector('.img-status'));
+}
+
+function checkImage(url, statusEl){
+  statusEl.textContent = 'চেক হচ্ছে...';
+  statusEl.style.color = 'var(--ink-soft)';
+  const img = new Image();
+  img.onload = ()=>{ statusEl.textContent = '✓ ঠিক আছে'; statusEl.style.color = 'var(--olive)'; };
+  img.onerror = ()=>{ statusEl.textContent = '✗ লোড হয়নি'; statusEl.style.color = 'var(--stamp)'; };
+  img.src = url;
+}
+function addLinkRow(label='', url=''){
+  const row = document.createElement('div');
+  row.className = 'rep-row';
+  row.innerHTML = `
+    <input type="text" class="small link-label" placeholder="নাম (ঐচ্ছিক)" value="${label}">
+    <input type="text" class="grow link-url" placeholder="https://..." value="${url}">
+    <button type="button">×</button>
+  `;
+  row.querySelector('button').addEventListener('click', ()=> row.remove());
+  $('linkRows').appendChild(row);
+}
+addImageRow();
+addLinkRow();
+$('addImageBtn').addEventListener('click', ()=> addImageRow());
+$('addLinkBtn').addEventListener('click', ()=> addLinkRow());
+
+let existingItems = null;
+
+$('dataJsonUpload').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      existingItems = JSON.parse(reader.result);
+      const maxAcc = existingItems.reduce((m,it)=>Math.max(m, it.accession||0), 0);
+      $('accession').value = maxAcc + 1;
+      $('uploadStatus').textContent = `✓ লোড হয়েছে — ${existingItems.length}টা এন্ট্রি পাওয়া গেছে, পরবর্তী অ্যাকসেশন নম্বর ${maxAcc+1} বসানো হলো।`;
+      $('uploadStatus').style.color = 'var(--olive)';
+    }catch(err){
+      existingItems = null;
+      $('uploadStatus').textContent = '✗ এই ফাইলটা সঠিক JSON না, পার্স করা যায়নি।';
+      $('uploadStatus').style.color = 'var(--stamp)';
+    }
+  };
+  reader.readAsText(file);
+});
+
+function parseEmailText(raw){
+  const lines = raw.split('\n');
+  const result = { title:'', text:'', category:'', address:'', images:[], links:[] };
+  let mode = null;
+  for(let line of lines){
+    const trimmed = line.trim();
+    if(/^শিরোনাম\s*:/.test(trimmed)){
+      result.title = trimmed.replace(/^শিরোনাম\s*:/, '').trim();
+      mode = null;
+    }else if(/^বিবরণ\s*:/.test(trimmed)){
+      result.text = trimmed.replace(/^বিবরণ\s*:/, '').trim();
+      mode = 'text';
+    }else if(/^ক্যাটাগরি\s*:/.test(trimmed)){
+      result.category = trimmed.replace(/^ক্যাটাগরি\s*:/, '').trim();
+      mode = null;
+    }else if(/^ঠিকানা\s*:/.test(trimmed)){
+      result.address = trimmed.replace(/^ঠিকানা\s*:/, '').trim();
+      mode = 'address';
+    }else if(/^ছবি\s*:/.test(trimmed)){
+      mode = 'images';
+    }else if(/^লিংক\s*:/.test(trimmed)){
+      mode = 'links';
+    }else if(trimmed.startsWith('-')){
+      const item = trimmed.replace(/^-\s*/, '');
+      if(mode === 'images' && item) result.images.push(item);
+      else if(mode === 'links' && item){
+        const parts = item.split('|').map(s=>s.trim());
+        if(parts.length >= 2) result.links.push({ label: parts[0], url: parts[1] });
+        else result.links.push({ label: '', url: parts[0] });
+      }
+    }else if(mode === 'text' && trimmed){
+      result.text += (result.text ? '\n' : '') + trimmed;
+    }else if(mode === 'address' && trimmed){
+      result.address += (result.address ? '\n' : '') + trimmed;
+    }
+  }
+  return result;
+}
+
+$('parseBtn').addEventListener('click', ()=>{
+  const raw = $('emailPaste').value;
+  if(!raw.trim()){ alert('আগে মেইলের লেখা পেস্ট করো'); return; }
+  const parsed = parseEmailText(raw);
+  if(!parsed.title){ alert('"শিরোনাম:" লাইনটা খুঁজে পাওয়া যায়নি — ফরম্যাট মিলিয়ে দেখো'); return; }
+
+  $('title').value = parsed.title;
+  $('text').value = parsed.text;
+  $('category').value = parsed.category;
+  $('address').value = parsed.address;
+
+  $('imageRows').innerHTML = '';
+  if(parsed.images.length){
+    parsed.images.forEach(img => addImageRow(img));
+  }else{
+    addImageRow();
+  }
+
+  $('linkRows').innerHTML = '';
+  if(parsed.links.length){
+    parsed.links.forEach(l => addLinkRow(l.label, l.url));
+  }else{
+    addLinkRow();
+  }
+
+  $('output').style.display = 'none';
+});
+
+function isValidUrl(str){
+  if(!str) return false;
+  if(str.startsWith('http://') || str.startsWith('https://')) return true;
+  // relative path like images/photo1.jpg — allow, will be checked once hosted
+  if(/^[a-zA-Z0-9_\-\/.]+\.(jpg|jpeg|png|gif|webp)$/i.test(str)) return true;
+  return false;
+}
+
+$('genBtn').addEventListener('click', ()=>{
+  const title = $('title').value.trim();
+  const errors = [];
+  const warnings = [];
+
+  if(!title) errors.push('শিরোনাম খালি রাখা যাবে না।');
+
+  const images = [...document.querySelectorAll('.img-input')].map(i=>i.value.trim()).filter(Boolean);
+  images.forEach(img => { if(!isValidUrl(img)) warnings.push(`এই ছবির লিংকটা ঠিকঠাক দেখাচ্ছে না: "${img}"`); });
+
+  const links = [...document.querySelectorAll('.link-url')].map((el,i)=>{
+    const label = document.querySelectorAll('.link-label')[i].value.trim();
+    const url = el.value.trim();
+    return url ? { label, url } : null;
+  }).filter(Boolean);
+  links.forEach(l => { if(!l.url.startsWith('http://') && !l.url.startsWith('https://')) warnings.push(`এই লিংকটা http/https দিয়ে শুরু হচ্ছে না: "${l.url}"`); });
+
+  const accession = Number($('accession').value) || 1;
+  if(existingItems){
+    if(existingItems.some(it => it.accession === accession)) errors.push(`অ্যাকসেশন নম্বর ${accession} আগে থেকেই ব্যবহার হয়েছে — অন্য নম্বর দাও।`);
+    if(existingItems.some(it => (it.title||'').trim().toLowerCase() === title.toLowerCase())) warnings.push('একই শিরোনামের একটা এন্ট্রি data.json-এ আগে থেকেই আছে — ইচ্ছাকৃত কিনা দেখে নাও।');
+  }
+
+  if(errors.length){
+    alert('এই সমস্যাগুলো ঠিক না করে এগোনো যাবে না:\n\n' + errors.join('\n'));
+    return;
+  }
+  if(warnings.length && !confirm('কিছু বিষয় খেয়াল করো:\n\n' + warnings.join('\n') + '\n\nএগুলো ঠিক থাকলে "OK" চেপে এগিয়ে যাও।')){
+    return;
+  }
+
+  const entry = {
+    id: 'it_' + Date.now(),
+    accession,
+    title,
+    text: $('text').value.trim(),
+    category: $('category').value.trim(),
+    address: $('address').value.trim(),
+    images,
+    links,
+    date: $('date').value || new Date().toISOString().slice(0,10)
+  };
+
+  $('jsonOut').textContent = JSON.stringify(entry, null, 2) + ',';
+  $('output').style.display = 'block';
+});
+
+$('copyBtn').addEventListener('click', ()=>{
+  navigator.clipboard.writeText($('jsonOut').textContent).then(()=>{
+    $('copyBtn').textContent = 'কপি হয়ে গেছে ✓';
+    setTimeout(()=> $('copyBtn').textContent = 'কপি করো', 1500);
+  });
+});
+</script>
+</body>
+</html>
